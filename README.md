@@ -6,8 +6,8 @@ https://github.com/PowerShellMafia/PowerSploit/blob/master/Recon/Invoke-Portscan
 
 Hostname      : 10.10.10.2
 alive         : True
-openPorts     : {6379}
-closedPorts   : {8088, 80}
+openPorts     : {6379, 80}
+closedPorts   : {8088}
 filteredPorts : {}
 finishTime    : 2019-07-26 17:28:28
  ```
