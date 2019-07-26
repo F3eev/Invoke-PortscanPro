@@ -12,7 +12,7 @@ filteredPorts : {}
 finishTime    : 2019-07-26 17:28:28
  ```
 
-## Invoke-PortscanPro 说明:
+## Invoke-PortscanPro:
 保留原项目所有功能,在此项目上添加了端口服务识别功能代码,
 * 添加 -sports 识别端口
 * 添加 -sports {8080,8022} 识别8080,8022端口
@@ -42,7 +42,7 @@ port          : service
 80            : status:Forbidden;title:None;
 
 ```
-## example
+## example:
 ```
 Invoke-PortscanPro -Hosts  10.10.10.2/24  -TopPorts 50 -threads 20 -sports {80,8080,8888}
 
