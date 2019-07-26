@@ -42,4 +42,8 @@ port          : service
 80            : status:Forbidden;title:None;
 
 ```
+## example
+```
+Invoke-PortscanPro -Hosts  10.10.10.2/24  -TopPorts 50 -threads 20 -sports {80,8080,8888}
 
+```
