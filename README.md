@@ -28,6 +28,6 @@ Domain name       : TEST
 3306              : mysql
 445               : smb
 
-Invoke-PortscanPro -Hosts  10.10.10.2/24  -TopPorts 50 -threads 20 -sports {80,8080,8888,445}
+Invoke-PortscanPro -Hosts 127.0.0.1  -ports {3306,445,1433,135,3389} -threads 5 -sports *
 
 ```
