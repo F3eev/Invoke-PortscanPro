@@ -2,8 +2,9 @@
 ## Invoke-PortscanPro:
 
 在内网探测过程中我们经常要使用到端口信息探测,使用代理扫描会存在丢包现象,上传到被控机可能被杀软识.此项目就是为了解决这种问题,powershell结合cobaltstrike完美实现无文件落地,在原项目[Invoke-Portscan](https://github.com/PowerShellMafia/PowerSploit/blob/master/Recon/Invoke-Portscan.ps1)基础上添加了如下功能:
-* 端口服务识别和
-* 获取web title
+* 端口识别
+* web title
+* netbios 信息
 
 ### example:
 * 添加 -sports 识别端口
