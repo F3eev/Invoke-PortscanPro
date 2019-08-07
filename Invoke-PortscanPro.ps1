@@ -835,28 +835,61 @@ http://webstersprodigy.net
                 }
 
                 # my pro main code
-
-                function GetOutput 
-                { 
+                function GetType { 
                     $buffer = new-object System.Byte[] 1024 
                     $encoding = new-object System.Text.AsciiEncoding 
-                    $outputBuffer = "" 
+                    # $outputBuffer = ""
+                    $outputBuffer = [Byte[]]@()
                     $findMore = $false 
-                    do{ 
+                    do { 
                         start-sleep -m 100 
                         $findmore = $false 
                         $stream.ReadTimeout = 100 
-                        do{ 
+                        do { 
                             try { 
                                 $read = $stream.Read($buffer, 0, 1024) 
-                                if($read -gt 0){ 
+                                if ($read -gt 0) { 
                                     $findmore = $true 
-                                    $outputBuffer += ($encoding.GetString($buffer, 0, $read)) 
+                                    # $outputBuffer += ($encoding.GetString($buffer, 0, $read)) 
+                                    $outputBuffer += ($buffer)
                                 } 
-                            } catch { $findMore = $false; $read = 0 } 
-                        } while($read -gt 0) 
-                    } while($findmore) 
+                            }
+                            catch { 
+                                $findMore = $false;
+                                $read = 0 
+                                } 
+                        } while ($read -gt 0) 
+                    } while ($findmore) 
                     $outputBuffer 
+                }
+
+                function TypeToHex{
+
+                    Param (
+                            $type
+                        )
+                    $hexString=""
+                    $encoding = new-object System.Text.AsciiEncoding 
+                    foreach ($item in $type) {
+
+
+                       
+                        if ($item -ge 33 -and $item -le 127){
+                            $hexString+=($encoding.GetString([Byte[]]$item))
+                        }elseif($item -eq 0){
+                            $hexString+="\x00"
+                        }elseif( $item -eq 10){
+                            $hexString+=("\n")
+                        }elseif( $item -eq 32){
+                            $hexString+=(" ")
+                        }
+                        elseif((($item).ToString('x').Length) -eq 1){
+                             $hexString+=("\x0"+($item).ToString('x'))
+                        }else{
+                            $hexString+=("\x"+($item).ToString('x'))
+                        } 
+                    }
+                    $hexString
                 }
                 # Distinguish service 
                 function DisService() {
@@ -868,141 +901,140 @@ http://webstersprodigy.net
                     )
                     
                     $Signs =
-                        'http|^HTTP.*',
-                        'http|^HTTP/0.',
-                        'http|^HTTP/1.',
-                        'http|<HEAD>.*<BODY>',
-                        'http|<HTML>.*',
-                        'http|<html>.*',
-                        'http|<!DOCTYPE.*',
-                        'http|^Invalid requested URL ',
-                        'http|.*<?xml',
-                        'http|^HTTP/.*\nServer: Apache/1',
-                        'http|^HTTP/.*\nServer: Apache/2',
-                        'http|.*Microsoft-IIS.*',
-                        'http|.*<title>.*',
-                        'http|^HTTP/.*\nServer: Microsoft-IIS',
-                        'http|^HTTP/.*Cookie.*ASPSESSIONID',
-                        'http|^<h1>Bad Request .Invalid URL.</h1>',
-                        'http-jserv|^HTTP/.*Cookie.*JServSessionId',
-                        'http-weblogic|^HTTP/.*Cookie.*WebLogicSession',
-                        'http-vnc|^HTTP/.*VNC desktop',
-                        'http-vnc|^HTTP/.*RealVNC/',
-                        'redis|^-ERR',
-                        'mongodb|^.*version.....([\.\d]+)',
-                        'pop3|.*POP3.*',
-                        'pop3|.*pop3.*',
-                        'ssh|SSH-2.0-OpenSSH.*',
-                        'ssh|SSH-1.0-OpenSSH.*',
-                        'ssh|.*ssh.*',
-                        'netbios|^\x79\x08.*BROWSE',
-                        'netbios|^\x79\x08.\x00\x00\x00\x00',
-                        'netbios|^\x05\x00\x0d\x03',
-                        'netbios|^\x83\x00',
-                        'netbios|^\x82\x00\x00\x00',
-                        'netbios|\x83\x00\x00\x01\x8f',
-                        'backdoor-fxsvc|^500 Not Loged in',
-                        'backdoor-shell|GET: command',
-                        'backdoor-shell|sh: GET:',
-                        'bachdoor-shell|[a-z]*sh: .* command not found',
-                        'backdoor-shell|^bash[$#]',
-                        'backdoor-shell|^sh[$#]',
-                        'backdoor-cmdshell|^Microsoft Windows .* Copyright .*>',
-                        'dell-openmanage|^\x4e\x00\x0d',
-                        'finger|^\r\n	Line	  User',
-                        'finger|Line	 User',
-                        'finger|Login name: ',
-                        'finger|Login.*Name.*TTY.*Idle',
-                        'finger|^No one logged on',
-                        'finger|^\r\nWelcome',
-                        'finger|^finger:',
-                        'finger|^must provide username',
-                        'finger|finger: GET: ',
-                        'ftp|^220.*\n331',
-                        'ftp|^220.*\n530',
-                        'ftp|^220.*FTP',
-                        'ftp|^220 .* Microsoft .* FTP',
-                        'ftp|^220 Inactivity timer',
-                        'ftp|^220 .* UserGate',
-                        'ftp|^220(.*?)',
-                        'ldap|^\x30\x0c\x02\x01\x01\x61',
-                        'ldap|^\x30\x32\x02\x01',
-                        'ldap|^\x30\x33\x02\x01',
-                        'ldap|^\x30\x38\x02\x01',
-                        'ldap|^\x30\x84',
-                        'ldap|^\x30\x45',
-                        'ldap|^\x30.*',
-                        'smb|^\0\0\0.\xffSMBr\0\0\0\0.*',
-                        'msrdp|^\x03\x00\x00\x0b',
-                        'msrdp|^\x03\x00\x00\x11',
-                        'msrdp|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$',
-                        'msrdp|^\x03\0\0\x17\x08\x02\0\0Z~\0\x0b\x05\x05@\x06\0\x08\x91J\0\x02X$',
-                        'msrdp|^\x03\0\0\x11\x08\x02..}\x08\x03\0\0\xdf\x14\x01\x01$',
-                        'msrdp|^\x03\0\0\x0b\x06\xd0\0\0\x03.\0$',
-                        'msrdp|^\x03\0\0\x0b\x06\xd0\0\0\0\0\0',
-                        'msrdp|^\x03\0\0\x0e\t\xd0\0\0\0[\x02\xa1]\0\xc0\x01\n$',
-                        'msrdp|^\x03\0\0\x0b\x06\xd0\0\x004\x12\0',
-                        'msrdp-proxy|^nmproxy: Procotol byte is not 8\n$',
-                        'msrpc|^\x05\x00\x0d\x03\x10\x00\x00\x00\x18\x00\x00\x00\x00\x00',
-                        'msrpc|\x05\0\r\x03\x10\0\0\0\x18\0\0\0....\x04\0\x01\x05\0\0\0\0$',
-                        'mssql|^\x04\x01\0C..\0\0\xaa\0\0\0/\x0f\xa2\x01\x0e.*',
-                        'mssql|^\x05\x6e\x00',
-                        'mssql|^\x04\x01\x00\x25\x00\x00\x01\x00\x00\x00\x15.*',
-                        'mssql|^\x04\x01\x00.\x00\x00\x01\x00\x00\x00\x15.*',
-                        'mssql|^\x04\x01\x00\x25\x00\x00\x01\x00\x00\x00\x15.*',
-                        'mssql|^\x04\x01\x00.\x00\x00\x01\x00\x00\x00\x15.*',
-                        'mssql|^\x04\x01\0\x25\0\0\x01\0\0\0\x15\0\x06\x01.*',
-                        'mssql|^\x04\x01\x00\x25\x00\x00\x01.*',
-                        'mysql|^\x19\x00\x00\x00\x0a',
-                        'mysql|^\x2c\x00\x00\x00\x0a',
-                        "mysql|hhost \'",
-                        "mysql|khost \'",
-                        'mysql|mysqladmin',
-                        'mysql|(.*)5(.*)log',
-                        'mysql|(.*)4(.*)log',
-                        "mysql|whost \'",
-                        'mysql|^\(\x00\x00',
-                        'mysql|this MySQL',
-                        'mysql|^N\x00',
-                        'mysql|(.*)mysql(.*)',
-                        'mssql|;MSSQLSERVER;',
-                        'nagiosd|Sorry, you \(.*are not among the allowed hosts...',
-                        'nessus|< NTP 1.2 >\x0aUser:',
-                        'oracle|\(ERROR_STACK=\(ERROR=\(CODE=',
-                        'oracle|\(ADDRESS=\(PROTOCOL=',
-                        'oracle-dbsnmp|^\x00\x0c\x00\x00\x04\x00\x00\x00\x00',
-                        'oracle-https|^220- ora',
-                        'oracle-rmi|\x00\x00\x00\x76\x49\x6e\x76\x61',
-                        'oracle-rmi|^\x4e\x00\x09',
-                        'postgres|Invalid packet length',
-                        'postgres|^EFATAL',
-                        'rlogin|login: ',
-                        'rlogin|rlogind: ',
-                        'rlogin|^\x01\x50\x65\x72\x6d\x69\x73\x73\x69\x6f\x6e\x20\x64\x65\x6e\x69\x65\x64\x2e\x0a',
-                        'rpc-nfs|^\x02\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00',
-                        'rpc|\x01\x86\xa0',
-                        'rpc|\x03\x9b\x65\x42\x00\x00\x00\x01',
-                        'rpc|^\x80\x00\x00',
-                        'rsync|^@RSYNCD:.*',
-                        'smux|^\x41\x01\x02\x00',
-                        'snmp|\x70\x75\x62\x6c\x69\x63\xa2',
-                        'snmp|\x41\x01\x02',
-                        'socks|^\x05[\x00-\x08]\x00',
-                        'ssh|^SSH-',
-                        'ssh|^SSH-.*openssh',
-                        'sybase|^\x04\x01\x00',
-                        'telnet|^\xff\xfd',
-                        'telnet-disabled|Telnet is disabled now',
-                        'telnet|^\xff\xfe',
-                        'telnet|^xff\xfb\x01\xff\xfb\x03\xff\xfb\0\xff\xfd.*',
-                        'tftp|^\x00[\x03\x05]\x00',
-                        'uucp|^login: password: ',
-                        'vnc|^RFB.*',
-                        'webmin|.*MiniServ',
-                        'RMI|^N.*',
-                        'webmin|^0\.0\.0\.0:.*:[0-9]',
-                        'websphere-javaw|^\x15\x00\x00\x00\x02\x02\x0a',
-                        'db2|.*SQLDB2RA'
+                    'http|^HTTP.*',
+                    'http|^HTTP/0.',
+                    'http|^HTTP/1.',
+                    'http|<HEAD>.*<BODY>',
+                    'http|<HTML>.*',
+                    'http|<html>.*',
+                    'http|<!DOCTYPE.*',
+                    'http|^Invalid requested URL ',
+                    'http|.*<?xml',
+                    'http|^HTTP/.*\nServer: Apache/1',
+                    'http|^HTTP/.*\nServer: Apache/2',
+                    'http|.*Microsoft-IIS.*',
+                    'http|.*<title>.*',
+                    'http|^HTTP/.*\nServer: Microsoft-IIS',
+                    'http|^HTTP/.*Cookie.*ASPSESSIONID',
+                    'http|^<h1>Bad Request .Invalid URL.</h1>',
+                    'http-jserv|^HTTP/.*Cookie.*JServSessionId',
+                    'http-weblogic|^HTTP/.*Cookie.*WebLogicSession',
+                    'http-vnc|^HTTP/.*VNC desktop',
+                    'http-vnc|^HTTP/.*RealVNC/',
+                    'redis|^-ERR',
+                    'mongodb|^.*version.....([\.\d]+)',
+                    'pop3|.*POP3.*',
+                    'pop3|.*pop3.*',
+                    'ssh|SSH-2.0-OpenSSH.*',
+                    'ssh|SSH-1.0-OpenSSH.*',
+                    'ssh|.*ssh.*',
+                    'netbios|^\\x79\\x08.*BROWSE',
+                    'netbios|^\\x79\\x08.\\x00\\x00\\x00\\x00',
+                    'netbios|^\\x05\\x00\\x0d\\x03',
+                    'netbios|^\\x83\\x00',
+                    'netbios|^\\x82\\x00\\x00\\x00',
+                    'netbios|\\x83\\x00\\x00\\x01\\x8f',
+                    'backdoor-fxsvc|^500 Not Loged in',
+                    'backdoor-shell|GET: command',
+                    'backdoor-shell|sh: GET:',
+                    'bachdoor-shell|[a-z]*sh: .* command not found',
+                    'backdoor-shell|^bash[$#]',
+                    'backdoor-shell|^sh[$#]',
+                    'backdoor-cmdshell|^Microsoft Windows .* Copyright .*>',
+                    'dell-openmanage|^\\x4e\\x00\\x0d',
+                    'finger|^\r\n	Line	  User',
+                    'finger|Line	 User',
+                    'finger|Login name: ',
+                    'finger|Login.*Name.*TTY.*Idle',
+                    'finger|^No one logged on',
+                    'finger|^\r\nWelcome',
+                    'finger|^finger:',
+                    'finger|^must provide username',
+                    'finger|finger: GET: ',
+                    'ftp|^220.*\n331',
+                    'ftp|^220.*\n530',
+                    'ftp|^220.*FTP',
+                    'ftp|^220 .* Microsoft .* FTP',
+                    'ftp|^220 Inactivity timer',
+                    'ftp|^220 .* UserGate',
+                    'ftp|^220(.*?)',
+                    'ldap|^\\x30\\x0c\\x02\\x01\\x01\\x61',
+                    'ldap|^\\x30\\x32\\x02\\x01',
+                    'ldap|^\\x30\\x33\\x02\\x01',
+                    'ldap|^\\x30\\x38\\x02\\x01',
+                    'ldap|^\\x30\\x84',
+                    'ldap|^\\x30\\x45',
+                    'ldap|^\\x30.*',
+                    'smb|^\\x00\\x00\\x00.*\\xffSMBr',
+                    'msrdp|^\\x03\\x00\\x00\\x0b',
+                    'msrdp|^\\x03\\x00\\x00\\x11',
+                    'msrdp|^\\x030x000x00\\x0b\\x06\\xd00x000x00\\x12.*0x00$',
+                    'msrdp|^\\x030x000x00\\x17\\x08\\x020x000x00Z~0x00\\x0b\\x05\\x05@\\x060x00\\x08\\x91J0x00\\x02X$',
+                    'msrdp|^\\x030x000x00\\x11\\x08\\x02..*}\\x08\\x030x000x00\\xdf\\x14\\x01\\x01$',
+                    'msrdp|^\\x030x000x00\\x0b\\x06\\xd00x000x00\\x03.*0x00$',
+                    'msrdp|^\\x030x000x00\\x0b\\x06\\xd00x000x000x000x000x00',
+                    'msrdp|^\\x030x000x00\\x0e\t\\xd00x000x000x00[\\x02\\xa1]0x00\\xc0\\x01\n$',
+                    'msrdp|^\\x030x000x00\\x0b\\x06\\xd00x00\\x004\\x120x00',
+                    'msrdp-proxy|^nmproxy: Procotol byte is not 8\n$',
+                    'msrpc|^\\x05\\x00\\x0d\\x03\\x10\\x00\\x00\\x00\\x18\\x00\\x00\\x00\\x00\\x00',
+                    'msrpc|\\x050x00\r\\x03\\x100x000x000x00\\x180x000x000x00....\\x040x00\\x01\\x050x000x000x000x00$',
+                    'mssql|^\\x04\\x010x00C.*0x000x00\\xaa0x000x000x00/\\x0f\\xa2\\x01\\x0e.*',
+                    'mssql|^\\x05\\x6e\\x00',
+                    'mssql|^\\x04\\x01\\x00\\x25\\x00\\x00\\x01\\x00\\x00\\x00\\x15.*',
+                    'mssql|^\\x04\\x01\\x00.*\\x00\\x00\\x01\\x00\\x00\\x00\\x15.*',
+                    'mssql|^\\x04\\x01\\x00\\x25\\x00\\x00\\x01\\x00\\x00\\x00\\x15.*',
+                    'mssql|^\\x04\\x01\\x00.*\\x00\\x00\\x01\\x00\\x00\\x00\\x15.*',
+                    'mssql|^\\x04\\x010x00\\x250x000x00\\x010x000x000x00\\x150x00\\x06\\x01.*',
+                    'mssql|^\\x04\\x01\\x00\\x25\\x00\\x00\\x01.*',
+                    'mysql|^\\x19\\x00\\x00\\x00\\x0a',
+                    'mysql|^\\x2c\\x00\\x00\\x00\\x0a',
+                    "mysql|hhost \'",
+                    "mysql|khost \'",
+                    'mysql|mysqladmin',
+                    'mysql|(.*)5(.*)log',
+                    'mysql|(.*)4(.*)log',
+                    "mysql|whost \'",
+                    'mysql|^\(\\x00\\x00',
+                    'mysql|this MySQL',
+                    'mysql|^N\\x00',
+                    'mysql|(.*)mysql(.*)',
+                    'nagiosd|Sorry, you \(.*are not among the allowed hosts...',
+                    'nessus|< NTP 1.2 >\\x0aUser:',
+                    'oracle|\(ERROR_STACK=\(ERROR=\(CODE=',
+                    'oracle|\(ADDRESS=\(PROTOCOL=',
+                    'oracle-dbsnmp|^\\x00\\x0c\\x00\\x00\\x04\\x00\\x00\\x00\\x00',
+                    'oracle-https|^220- ora',
+                    'oracle-rmi|\\x00\\x00\\x00\\x76\\x49\\x6e\\x76\\x61',
+                    'oracle-rmi|^\\x4e\\x00\\x09',
+                    'postgres|Invalid packet length',
+                    'postgres|^EFATAL',
+                    'rlogin|login: ',
+                    'rlogin|rlogind: ',
+                    'rlogin|^\\x01\\x50\\x65\\x72\\x6d\\x69\\x73\\x73\\x69\\x6f\\x6e\\x20\\x64\\x65\\x6e\\x69\\x65\\x64\\x2e\\x0a',
+                    'rpc-nfs|^\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x00',
+                    'rpc|\\x01\\x86\\xa0',
+                    'rpc|\\x03\\x9b\\x65\\x42\\x00\\x00\\x00\\x01',
+                    'rpc|^\\x80\\x00\\x00',
+                    'rsync|^@RSYNCD:.*',
+                    'smux|^\\x41\\x01\\x02\\x00',
+                    'snmp|\\x70\\x75\\x62\\x6c\\x69\\x63\\xa2',
+                    'snmp|\\x41\\x01\\x02',
+                    'socks|^\\x05[\\x00-\\x08]\\x00',
+                    'ssh|^SSH-',
+                    'ssh|^SSH-.*openssh',
+                    'sybase|^\\x04\\x01\\x00',
+                    'telnet|^\\xff\\xfd',
+                    'telnet-disabled|Telnet is disabled now',
+                    'telnet|^\\xff\\xfe',
+                    'telnet|^xff\\xfb\\x01\\xff\\xfb\\x03\\xff\\xfb0x00\\xff\\xfd.*',
+                    'tftp|^\\x00[\\x03\\x05]\\x00',
+                    'uucp|^login: password: ',
+                    'vnc|^RFB.*',
+                    'webmin|.*MiniServ',
+                    'RMI|^N.*',
+                    'webmin|^0\.0\.0\.0:.*:[0-9]',
+                    'websphere-javaw|^\\x15\\x00\\x00\\x00\\x02\\x02\\x0a',
+                    'db2|.*SQLDB2RA'
                     foreach ($sign in $Signs) {
                         if ($output -match ($sign -Split "\|")[1]) {
                             return $ip , $port , ($sign -Split "\|")[0]
@@ -1010,6 +1042,84 @@ http://webstersprodigy.net
                     }
                     return $ip , $port , $False
                 }
+                # remove 0
+                function Remove0{
+                     Param (
+                        $str
+                     )
+                     $rescont=""
+                     [int[]][char[]]$str | % { 
+                           
+                         if( ([int[]][char[]]$_) -ne 0 ){
+                            $rescont+=([char[]]$_)
+                         }
+                      }
+                      $rescont
+                }
+                # get computer info
+                function Getinfo {
+                 Param (
+                    $thost,
+                    $port
+                 )
+                
+                $resdic=@{}
+                $payload1= [Byte[]]@(0x00,0x00,0x00,0x85,0xff,0x53,0x4d,0x42,0x72,0x00,0x00,0x00,0x00,0x18,0x53,0xc8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xfe,0x00,0x00,0x00,0x00,0x00,0x62,0x00,0x02,0x50,0x43,0x20,0x4e,0x45,0x54,0x57,0x4f,0x52,0x4b,0x20,0x50,0x52,0x4f,0x47,0x52,0x41,0x4d,0x20,0x31,0x2e,0x30,0x00,0x02,0x4c,0x41,0x4e,0x4d,0x41,0x4e,0x31,0x2e,0x30,0x00,0x02,0x57,0x69,0x6e,0x64,0x6f,0x77,0x73,0x20,0x66,0x6f,0x72,0x20,0x57,0x6f,0x72,0x6b,0x67,0x72,0x6f,0x75,0x70,0x73,0x20,0x33,0x2e,0x31,0x61,0x00,0x02,0x4c,0x4d,0x31,0x2e,0x32,0x58,0x30,0x30,0x32,0x00,0x02,0x4c,0x41,0x4e,0x4d,0x41,0x4e,0x32,0x2e,0x31,0x00,0x02,0x4e,0x54,0x20,0x4c,0x4d,0x20,0x30,0x2e,0x31,0x32,0x00)
+                $payload2 = [Byte[]]@(0x00,0x00,0x01,0x0a,0xff,0x53,0x4d,0x42,0x73,0x00,0x00,0x00,0x00,0x18,0x07,0xc8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xfe,0x00,0x00,0x40,0x00,0x0c,0xff,0x00,0x0a,0x01,0x04,0x41,0x32,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x4a,0x00,0x00,0x00,0x00,0x00,0xd4,0x00,0x00,0xa0,0xcf,0x00,0x60,0x48,0x06,0x06,0x2b,0x06,0x01,0x05,0x05,0x02,0xa0,0x3e,0x30,0x3c,0xa0,0x0e,0x30,0x0c,0x06,0x0a,0x2b,0x06,0x01,0x04,0x01,0x82,0x37,0x02,0x02,0x0a,0xa2,0x2a,0x04,0x28,0x4e,0x54,0x4c,0x4d,0x53,0x53,0x50,0x00,0x01,0x00,0x00,0x00,0x07,0x82,0x08,0xa2,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x05,0x02,0xce,0x0e,0x00,0x00,0x00,0x0f,0x00,0x57,0x00,0x69,0x00,0x6e,0x00,0x64,0x00,0x6f,0x00,0x77,0x00,0x73,0x00,0x20,0x00,0x53,0x00,0x65,0x00,0x72,0x00,0x76,0x00,0x65,0x00,0x72,0x00,0x20,0x00,0x32,0x00,0x30,0x00,0x30,0x00,0x33,0x00,0x20,0x00,0x33,0x00,0x37,0x00,0x39,0x00,0x30,0x00,0x20,0x00,0x53,0x00,0x65,0x00,0x72,0x00,0x76,0x00,0x69,0x00,0x63,0x00,0x65,0x00,0x20,0x00,0x50,0x00,0x61,0x00,0x63,0x00,0x6b,0x00,0x20,0x00,0x32,0x00,0x00,0x00,0x00,0x00,0x57,0x00,0x69,0x00,0x6e,0x00,0x64,0x00,0x6f,0x00,0x77,0x00,0x73,0x00,0x20,0x00,0x53,0x00,0x65,0x00,0x72,0x00,0x76,0x00,0x65,0x00,0x72,0x00,0x20,0x00,0x32,0x00,0x30,0x00,0x30,0x00,0x33,0x00,0x20,0x00,0x35,0x00,0x2e,0x00,0x32,0x00,0x00,0x00,0x00,0x00)
+                $payload3=[Byte[]]@(0x81,0x00,0x00,0x44,0x20,0x43,0x4b,0x46,0x44,0x45,0x4e,0x45,0x43,0x46,0x44,0x45,0x46,0x46,0x43,0x46,0x47,0x45,0x46,0x46,0x43,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x00,0x20,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x43,0x41,0x41,0x41,0x00)
+                
+                $socket = new-object System.Net.Sockets.TcpClient($thost , $port) 
+                $stream = $socket.GetStream()
+
+                if ($port -eq 139){
+                    Write-Host 139
+                    $stream.Write($payload3, 0, $payload3.Length)
+                }
+                $stream.Write($payload1, 0, $payload1.Length)
+                $output = GetType
+                #Write-Host $output
+                $stream.Write($payload2, 0, $payload2.Length)
+                $output = GetType
+                $encoding = new-object System.Text.AsciiEncoding 
+                #Write-host ($encoding.GetString($output, 0, 1024))
+                $start=$encoding.GetString($output, 0, 1024).indexof("NTLMSSP")
+                $len=47 + $output[43]+$output[44]*256
+                $offset=$output[$start+44]
+                $index= $start+$offset
+                $osversion= Remove0 ($encoding.GetString($output, $len, 1024-$len-1))
+                $resdic["os"]=$osversion
+                $length = $output[$start + 40] +$output[$start + 41] * 256 
+
+                while ($index -lt ($start + $offset + $length)) {
+
+                    $item_type = $output[$index ]+$output[$index+1]
+                    $item_length = $output[$index + 2] + $output[$index + 3] * 256 
+                    $item_content=$encoding.GetString($output, $index+4,$item_length)
+                  
+                    $rescont =  Remove0  $item_content
+                    if ($output[$index] -eq 0x01  -and $output[$index+1] -eq 0x00 )
+                    {
+                       
+                        $resdic["Computer name"]=$rescont
+                    }elseif ($output[$index] -eq 0x02 -and $output[$index+1] -eq 0x00){
+                      
+                        $resdic["Domain name"]=$rescont
+                    }elseif ($output[$index] -eq 0x03 -and $output[$index+1] -eq 0x00){
+                        
+                        $resdic["DNS computer name"]=$rescont
+                    }elseif ($output[$index] -eq 0x04 -and $output[$index+1] -eq 0x00){
+                      
+                        $resdic["DNS domain name"]=$rescont
+                    }elseif ($output[$index] -eq 0x05 -and $output[$index+1] -eq 0x00){
+                      
+                        $resdic["DNS tree name"]=$rescont
+                    }
+                     
+                    $index +=  4 + $item_length
+                }
+
+                Write-Output $resdic
+            }
                 # get service 
                 function GetService
                 {
@@ -1018,36 +1128,45 @@ http://webstersprodigy.net
                         $thost,
                         $port
                     )
-                    $putData =
-                        '\r\n\r\n',
-                        'GET / HTTP/1.0\r\n\r\n',
-                        'GET / \r\n\r\n',
-                        '\x01\x00\x00\x00\x01\x00\x00\x00\x08\x08',
-                        '\x80\0\0\x28\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
-                        '\x03\0\0\x0b\x06\xe0\0\0\0\0\0',
-                        '\0\0\0\xa4\xff\x53\x4d\x42\x72\0\0\0\0\x08\x01\x40\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x40\x06\0\0\x01\0\0\x81\0\x02PC NETWORK PROGRAM 1.0\0\x02MICROSOFT NETWORKS 1.03\0\x02MICROSOFT NETWORKS 3.0\0\x02LANMAN1.0\0\x02LM1.2X002\0\x02Samba\0\x02NT LANMAN 1.0\0\x02NT LM 0.12\0',
-                        '\x80\x9e\x01\x03\x01\x00u\x00\x00\x00 \x00\x00f\x00\x00e\x00\x00d\x00\x00c\x00\x00b\x00\x00:\x00\x009\x00\x008\x00\x005\x00\x004\x00\x003\x00\x002\x00\x00/\x00\x00\x1b\x00\x00\x1a\x00\x00\x19\x00\x00\x18\x00\x00\x17\x00\x00\x16\x00\x00\x15\x00\x00\x14\x00\x00\x13\x00\x00\x12\x00\x00\x11\x00\x00\n\x00\x00\t\x00\x00\x08\x00\x00\x06\x00\x00\x05\x00\x00\x04\x00\x00\x03\x07\x00\xc0\x06\x00@\x04\x00\x80\x03\x00\x80\x02\x00\x80\x01\x00\x80\x00\x00\x02\x00\x00\x01\xe4i<+\xf6\xd6\x9b\xbb\xd3\x81\x9f\xbf\x15\xc1@\xa5o\x14,M \xc4\xc7\xe0\xb6\xb0\xb2\x1f\xf9)\xe8\x98',
-                        '\x16\x03\0\0S\x01\0\0O\x03\0?G\xd7\xf7\xba,\xee\xea\xb2`~\xf3\0\xfd\x82{\xb9\xd5\x96\xc8w\x9b\xe6\xc4\xdb<=\xdbo\xef\x10n\0\0(\0\x16\0\x13\0\x0a\0f\0\x05\0\x04\0e\0d\0c\0b\0a\0`\0\x15\0\x12\0\x09\0\x14\0\x11\0\x08\0\x06\0\x03\x01\0',
-                        '< NTP/1.2 >\n',
-                        '< NTP/1.1 >\n',
-                        '< NTP/1.0 >\n',
-                        '\0Z\0\0\x01\0\0\0\x016\x01,\0\0\x08\0\x7F\xFF\x7F\x08\0\0\0\x01\0 \0:\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\xE6\0\0\0\x01\0\0\0\0\0\0\0\0(CONNECT_DATA=(COMMAND=version))',
-                        '\x12\x01\x00\x34\x00\x00\x00\x00\x00\x00\x15\x00\x06\x01\x00\x1b\x00\x01\x02\x00\x1c\x00\x0c\x03\x00\x28\x00\x04\xff\x08\x00\x01\x55\x00\x00\x00\x4d\x53\x53\x51\x4c\x53\x65\x72\x76\x65\x72\x00\x48\x0f\x00\x00',
-                        '\0\0\0\0\x44\x42\x32\x44\x41\x53\x20\x20\x20\x20\x20\x20\x01\x04\0\0\0\x10\x39\x7a\0\x01\0\0\0\0\0\0\0\0\0\0\x01\x0c\0\0\0\0\0\0\x0c\0\0\0\x0c\0\0\0\x04',
-                        '\x01\xc2\0\0\0\x04\0\0\xb6\x01\0\0\x53\x51\x4c\x44\x42\x32\x52\x41\0\x01\0\0\x04\x01\x01\0\x05\0\x1d\0\x88\0\0\0\x01\0\0\x80\0\0\0\x01\x09\0\0\0\x01\0\0\x40\0\0\0\x01\x09\0\0\0\x01\0\0\x40\0\0\0\x01\x08\0\0\0\x04\0\0\x40\0\0\0\x01\x04\0\0\0\x01\0\0\x40\0\0\0\x40\x04\0\0\0\x04\0\0\x40\0\0\0\x01\x04\0\0\0\x04\0\0\x40\0\0\0\x01\x04\0\0\0\x04\0\0\x40\0\0\0\x01\x04\0\0\0\x02\0\0\x40\0\0\0\x01\x04\0\0\0\x04\0\0\x40\0\0\0\x01\0\0\0\0\x01\0\0\x40\0\0\0\0\x04\0\0\0\x04\0\0\x80\0\0\0\x01\x04\0\0\0\x04\0\0\x80\0\0\0\x01\x04\0\0\0\x03\0\0\x80\0\0\0\x01\x04\0\0\0\x04\0\0\x80\0\0\0\x01\x08\0\0\0\x01\0\0\x40\0\0\0\x01\x04\0\0\0\x04\0\0\x40\0\0\0\x01\x10\0\0\0\x01\0\0\x80\0\0\0\x01\x10\0\0\0\x01\0\0\x80\0\0\0\x01\x04\0\0\0\x04\0\0\x40\0\0\0\x01\x09\0\0\0\x01\0\0\x40\0\0\0\x01\x09\0\0\0\x01\0\0\x80\0\0\0\x01\x04\0\0\0\x03\0\0\x80\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\x01\x04\0\0\x01\0\0\x80\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01\0\0\x40\0\0\0\x01\0\0\0\0\x01\0\0\x40\0\0\0\0\x20\x20\x20\x20\x20\x20\x20\x20\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01\0\xff\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xe4\x04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x7f',
-                        '\x41\0\0\0\x3a\x30\0\0\xff\xff\xff\xff\xd4\x07\0\0\0\0\0\0test.$cmd\0\0\0\0\0\xff\xff\xff\xff\x1b\0\0\0\x01serverStatus\0\0\0\0\0\0\0\xf0\x3f\0',
+                   
+                    $putData =@(
+                       '\r\n\r\n',
+                       'GET / HTTP/1.0\r\n\r\n'
+                       'GET / \r\n\r\n',
+                       [Byte[]]@(0x01,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x08,0x08),
+                       [Byte[]]@(0x80,0x00,0x00,0x28,0x72,0xFE,0x1D,0x13,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x02,0x00,0x01,0x86,0xA0,0x00,0x01,0x97,0x7C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00),
+                       [Byte[]]@(0x03,0x00,0x00,0x0b,0x06,0xe0,0x00,0x00,0x00,0x00,0x00),
+                       [Byte[]]@(0x00,0x00,0x00,0xa4,0xff,0x53,0x4d,0x42,0x72,0x00,0x00,0x00,0x00,0x08,0x01,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x06,0x00,0x00,0x01,0x00,0x00,0x81,0x00,0x02,0x50,0x43,0x20,0x4e,0x45,0x54,0x57,0x4f,0x52,0x4b,0x20,0x50,0x52,0x4f,0x47,0x52,0x41,0x4d,0x20,0x31,0x2e,0x30,0x00,0x02,0x4d,0x49,0x43,0x52,0x4f,0x53,0x4f,0x46,0x54,0x20,0x4e,0x45,0x54,0x57,0x4f,0x52,0x4b,0x53,0x20,0x31,0x2e,0x30,0x33,0x00,0x02,0x4d,0x49,0x43,0x52,0x4f,0x53,0x4f,0x46,0x54,0x20,0x4e,0x45,0x54,0x57,0x4f,0x52,0x4b,0x53,0x20,0x33,0x2e,0x30,0x00,0x02,0x4c,0x41,0x4e,0x4d,0x41,0x4e,0x31,0x2e,0x30,0x00,0x02,0x4c,0x4d,0x31,0x2e,0x32,0x58,0x30,0x30,0x32,0x00,0x02,0x53,0x61,0x6d,0x62,0x61,0x00,0x02,0x4e,0x54,0x20,0x4c,0x41,0x4e,0x4d,0x41,0x4e,0x20,0x31,0x2e,0x30,0x00,0x02,0x4e,0x54,0x20,0x4c,0x4d,0x20,0x30,0x2e,0x31,0x32,0x00),
+                       
+                       [Byte[]](0x80,0x9e,0x01,0x03,0x01,0x00,0x75,0x00,0x00,0x00,0x20,0x00,0x00,0x66,0x00,0x00,0x65,0x00,0x00,0x64,0x00,0x00,0x63,0x00,0x00,0x62,0x00,0x00,0x3a,0x00,0x00,0x39,0x00,0x00,0x38,0x00,0x00,0x35,0x00,0x00,0x34,0x00,0x00,0x33,0x00,0x00,0x32,0x00,0x00,0x2f,0x00,0x00,0x1b,0x00,0x00,0x1a,0x00,0x00,0x19,0x00,0x00,0x18,0x00,0x00,0x17,0x00,0x00,0x16,0x00,0x00,0x15,0x00,0x00,0x14,0x00,0x00,0x13,0x00,0x00,0x12,0x00,0x00,0x11,0x00,0x00,0x10,0x00,0x00,0x09,0x00,0x00,0x08,0x00,0x00,0x06,0x00,0x00,0x05,0x00,0x00,0x04,0x00,0x00,0x03,0x07,0x00,0xc0,0x06,0x00,0x40,0x04,0x00,0x80,0x03,0x00,0x80,0x02,0x00,0x80,0x01,0x00,0x80,0x00,0x00,0x02,0x00,0x00,0x01,0xe4,0x69,0x3c,0x2b,0xf6,0xd6,0x9b,0xbb,0xd3,0x81,0x9f,0xbf,0x15,0xc1,0x40,0xa5,0x6f,0x14,0x2c,0x4d,0x20,0xc4,0xc7,0xe0,0xb6,0xb0,0xb2,0x1f,0xf9,0x29,0xe8,0x98),
+
+                       [Byte[]](0x16,0x03,0x00,0x00,0x53,0x01,0x00,0x00,0x4f,0x03,0x00,0x3f,0x47,0xd7,0xf7,0xba,0x2c,0xee,0xea,0xb2,0x60,0x7e,0xf3,0x00,0xfd,0x82,0x7b,0xb9,0xd5,0x96,0xc8,0x77,0x9b,0xe6,0xc4,0xdb,0x3c,0x3d,0xdb,0x6f,0xef,0x10,0x6e,0x00,0x00,0x28,0x00,0x16,0x00,0x13,0x00,0x0a,0x00,0x66,0x00,0x05,0x00,0x04,0x00,0x65,0x00,0x64,0x00,0x63,0x00,0x62,0x00,0x61,0x00,0x60,0x00,0x15,0x00,0x12,0x00,0x09,0x00,0x14,0x00,0x11,0x00,0x08,0x00,0x06,0x00,0x03,0x01,0x00),
+                       '< NTP/1.2 >\n',
+                       '< NTP/1.1 >\n',
+                       '< NTP/1.0 >\n',
+                        [Byte[]]@(0x12,0x01,0x00,0x34,0x00,0x00,0x00,0x00,0x00,0x00,0x15,0x00,0x06,0x01,0x00,0x1b,0x00,0x01,0x02,0x00,0x1c,0x00,0x0c,0x03,0x00,0x28,0x00,0x04,0xff,0x08,0x00,0x01,0x55,0x00,0x00,0x00,0x4d,0x53,0x53,0x51,0x4c,0x53,0x65,0x72,0x76,0x65,0x72,0x00,0x48,0x0f,0x00,0x00)
+
+                        [Byte[]]@(0x00,0x00,0x00,0x00,0x44,0x42,0x32,0x44,0x41,0x53,0x20,0x20,0x20,0x20,0x20,0x20,0x01,0x04,0x00,0x00,0x00,0x10,0x39,0x7a,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x0c,0x00,0x00,0x00,0x00,0x00,0x00,0x0c,0x00,0x00,0x00,0x0c,0x00,0x00,0x00,0x04),
+                        [Byte[]]@(0x01,0xc2,0x00,0x00,0x00,0x04,0x00,0x00,0xb6,0x01,0x00,0x00,0x53,0x51,0x4c,0x44,0x42,0x32,0x52,0x41,0x00,0x01,0x00,0x00,0x04,0x01,0x01,0x00,0x05,0x00,0x1d,0x00,0x88,0x00,0x00,0x00,0x01,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x09,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x09,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x08,0x00,0x00,0x00,0x04,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x40,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x02,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x03,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x08,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x10,0x00,0x00,0x00,0x01,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x10,0x00,0x00,0x00,0x01,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x04,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x09,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x09,0x00,0x00,0x00,0x01,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x00,0x03,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x04,0x00,0x00,0x01,0x00,0x00,0x80,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0xff,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xe4,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7f),
+                        [Byte[]]@(0x41,0x00,0x00,0x00,0x3a,0x30,0x00,0x00,0xff,0xff,0xff,0xff,0xd4,0x07,0x00,0x00,0x00,0x00,0x00,0x00,0x74,0x65,0x73,0x74,0x2e,0x24,0x63,0x6d,0x64,0x00,0x00,0x00,0x00,0x00,0xff,0xff,0xff,0xff,0x1b,0x00,0x00,0x00,0x01,0x73,0x65,0x72,0x76,0x65,0x72,0x53,0x74,0x61,0x74,0x75,0x73,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf0,0x3f,0x00),
                         'JDWP-Handshake',
-                        'JRMI\x00\x02\x4b'
+                       [Byte[]](0x4a,0x52,0x4d,0x49,0x00,0x02,0x4b),
+                       [Byte[]]@(0x00,0x00,0x00,0x85,0xff,0x53,0x4d,0x42,0x72,0x00,0x00,0x00,0x00,0x18,0x53,0xc8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xfe,0x00,0x00,0x00,0x00,0x00,0x62,0x00,0x02,0x50,0x43,0x20,0x4e,0x45,0x54,0x57,0x4f,0x52,0x4b,0x20,0x50,0x52,0x4f,0x47,0x52,0x41,0x4d,0x20,0x31,0x2e,0x30,0x00,0x02,0x4c,0x41,0x4e,0x4d,0x41,0x4e,0x31,0x2e,0x30,0x00,0x02,0x57,0x69,0x6e,0x64,0x6f,0x77,0x73,0x20,0x66,0x6f,0x72,0x20,0x57,0x6f,0x72,0x6b,0x67,0x72,0x6f,0x75,0x70,0x73,0x20,0x33,0x2e,0x31,0x61,0x00,0x02,0x4c,0x4d,0x31,0x2e,0x32,0x58,0x30,0x30,0x32,0x00,0x02,0x4c,0x41,0x4e,0x4d,0x41,0x4e,0x32,0x2e,0x31,0x00,0x02,0x4e,0x54,0x20,0x4c,0x4d,0x20,0x30,0x2e,0x31,0x32,0x00)
+                    )
+
                     $Info=""
                     $socket = new-object System.Net.Sockets.TcpClient($thost, $port) 
                     $stream = $socket.GetStream()
-                    $writer = new-object System.IO.StreamWriter $stream 
-                    $SCRIPT:output = GetOutput 
+                    
+                    $SCRIPT:output = GetType 
+                    # $output = GetType 
+                    # Write-Host $output
                     $socket.Close()
                     $stream.Close() 
                     if ($output) {
                         #write-host "1 get data ",$thost,$port,$output
-                        
+                        $output=TypeToHex $output
+
                         $server = DisService $thost  $port  $output
                         if($server[2]){
                             $Info=$server[2]
@@ -1057,19 +1176,28 @@ http://webstersprodigy.net
                         
                     }else{
                         
-                        # write-host $thost,$port,"requests data"
                         foreach ($put in $putData) { 
-                            # write-host $put 
+                          
                             $socket = new-object System.Net.Sockets.TcpClient($thost ,$port) 
                             $stream = $socket.GetStream()
-                            $writer = new-object System.IO.StreamWriter $stream 
-                            # $output=""
-                            foreach ($line in $put) { 
-                                $writer.WriteLine($line) 
+                            
+                            if ($put.gettype().Name -eq "Byte[]"){
+                                # Write-Host "Byte[]"
+                                $stream.Write($put, 0, $put.Length)
+                                $SCRIPT:output = GetType 
+                            }else{
+                                $writer = new-object System.IO.StreamWriter $stream 
+                                $writer.WriteLine($put) 
                                 $writer.Flush() 
-                                $SCRIPT:output = GetOutput 
-                            } 
+
+                                $SCRIPT:output = GetType  
+                                $writer.Close() 
+                            }
+                            
+                            
                             if ($output) {
+                                $output = (TypeToHex $output)
+                                # Write-Host $output
                                 $service = DisService $thost  $port $output
                                 if ($service[2] -eq 'http' ) {
                                     $WebTarget="http://"+$thost+":"+$port
@@ -1082,11 +1210,10 @@ http://webstersprodigy.net
                                 }
                             }
                             $socket.Close()
-                            $writer.Close() 
                             $stream.Close() 
                         }
                     }
-                    @{port=$port ; detail=$Info}
+                     @{port=$port ; detail=$Info}
 
                 }
                 # get web info  title Status
@@ -1282,6 +1409,7 @@ http://webstersprodigy.net
 
                 # my pro main code 
                 $portInfo=@{}  # return port  info
+                $computerInfo=@{}
                 [string[]] $portService=@() # get service port 
      
                 if($SPortsList -eq "*"){
@@ -1300,10 +1428,14 @@ http://webstersprodigy.net
                 }
               
                 # remove some port 
-                $remport=@(445,139,135,3389)
+                $remport=@()
                 
                
                 foreach($port in $portService){
+                    
+                    if($port -eq 445){
+                       $computerInfo = Getinfo $thost $port
+                    }
                     
                     if(!($remport -contains $port)){
                         #write-host $port
@@ -1314,7 +1446,7 @@ http://webstersprodigy.net
                 }
                
                 # my pro main code end
-                return @($hostResult, $openPorts, $closedPorts, $filteredPorts,$portInfo)
+                return @($hostResult, $openPorts, $closedPorts, $filteredPorts,$portInfo,$computerInfo)
                 }
             }
             
@@ -1356,11 +1488,12 @@ http://webstersprodigy.net
                     $jobOut = @(Receive-Job $job)
                     [bool]$hostUp = $jobOut[0]
                     $jobName = $job.Name
-                    $portServices = $jobOut[4]
+                    
                     $openPorts = $jobOut[1]
                     $closedPorts = $jobOut[2]
                     $filteredPorts = $jobOut[3]
-
+                    $portServices = $jobOut[4]
+                    $computerInfo = $jobOut[5]
                     if($hostUp) {
                         $upHosts ++
                     }
@@ -1376,9 +1509,12 @@ http://webstersprodigy.net
                         $hostObj | Add-Member -MemberType Noteproperty -Name filteredPorts -Value $filteredPorts
                         $hostObj | Add-Member -MemberType NoteProperty -Name finishTime -Value $hostDate
                         # my pro main code 
-                        $hostObj | Add-Member -MemberType NoteProperty -Name port -Value "service"
-                        
+                       
                         foreach($pair in  $portServices.GetEnumerator()){
+
+                            $hostObj | Add-Member -MemberType Noteproperty -Name $pair.key -Value $pair.value
+                        }
+                        foreach($pair in  $computerInfo.GetEnumerator()){
 
                             $hostObj | Add-Member -MemberType Noteproperty -Name $pair.key -Value $pair.value
                         }
