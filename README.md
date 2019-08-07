@@ -11,6 +11,8 @@
 * 添加 -sports * 识别所有开放端口
 * 自动获取主机netbios信息
 ```
+Invoke-PortscanPro -Hosts 127.0.0.1  -ports {3306,445,1433,135,3389} -threads 5 -sports *
+
 Hostname          : 127.0.0.1
 alive             : True
 openPorts         : {3306, 445, 135, 3389}
@@ -28,6 +30,5 @@ Domain name       : TEST
 3306              : mysql
 445               : smb
 
-Invoke-PortscanPro -Hosts 127.0.0.1  -ports {3306,445,1433,135,3389} -threads 5 -sports *
 
 ```
