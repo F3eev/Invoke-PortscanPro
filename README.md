@@ -21,17 +21,24 @@ finishTime    : 2019-07-26 17:28:28
 port          : service
 6379          : redis
 
-Invoke-PortscanPro -Hosts  10.10.10.2  -ports {8088,80,6379} -threads 5 -sports *
+Invoke-PortscanPro -Hosts 127.0.0.1  -ports {3306,445,1433,135,3389} -threads 5 -sports *
 
-Hostname      : 10.10.10.2
-alive         : True
-openPorts     : {6379, 80}
-closedPorts   : {8088}
-filteredPorts : {}
-finishTime    : 2019-07-26 17:28:28
-port          : service
-6379          : redis
-80            : status:Forbidden;title:None;
+Hostname          : 127.0.0.1
+alive             : True
+openPorts         : {3306, 445, 135, 3389}
+closedPorts       : {1433}
+filteredPorts     : {}
+finishTime        : 2019-08-07 22:07:34
+135               : netbios
+3389              : msrdp
+3306              : mysql
+445               : smb
+os                : Windows 7 Professional 7601 Service Pack 1Windows 7 Professional 6.1
+DNS computer name : PC-WIN.test.com
+DNS tree name     : test.com
+DNS domain name   : test.com
+Computer name     : PC-WIN
+Domain name       : TEST
 
 
 Invoke-PortscanPro -Hosts  10.10.10.2/24  -TopPorts 50 -threads 20 -sports {80,8080,8888}
