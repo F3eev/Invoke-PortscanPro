@@ -9,38 +9,25 @@
 * 添加 -sports 识别端口
 * 添加 -sports {8080,8022} 识别8080,8022端口
 * 添加 -sports * 识别所有开放端口
+* 自动获取主机netbios信息
 ```
-Invoke-PortscanPro -Hosts  10.10.10.2  -ports {8088,80,6379} -threads 5 -sports {6379}
-
-Hostname      : 10.10.10.2
-alive         : True
-openPorts     : {6379, 80}
-closedPorts   : {8088}
-filteredPorts : {}
-finishTime    : 2019-07-26 17:28:28
-port          : service
-6379          : redis
-
-Invoke-PortscanPro -Hosts 127.0.0.1  -ports {3306,445,1433,135,3389} -threads 5 -sports *
-
 Hostname          : 127.0.0.1
 alive             : True
 openPorts         : {3306, 445, 135, 3389}
 closedPorts       : {1433}
 filteredPorts     : {}
-finishTime        : 2019-08-07 22:07:34
-135               : netbios
-3389              : msrdp
-3306              : mysql
-445               : smb
+finishTime        : 2019-08-07 22:11:16
 os                : Windows 7 Professional 7601 Service Pack 1Windows 7 Professional 6.1
 DNS computer name : PC-WIN.test.com
 DNS tree name     : test.com
 DNS domain name   : test.com
 Computer name     : PC-WIN
 Domain name       : TEST
+135               : netbios
+3389              : msrdp
+3306              : mysql
+445               : smb
 
-
-Invoke-PortscanPro -Hosts  10.10.10.2/24  -TopPorts 50 -threads 20 -sports {80,8080,8888}
+Invoke-PortscanPro -Hosts  10.10.10.2/24  -TopPorts 50 -threads 20 -sports {80,8080,8888,445}
 
 ```
