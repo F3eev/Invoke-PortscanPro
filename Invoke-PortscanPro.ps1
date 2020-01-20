@@ -1,140 +1,81 @@
- function Invoke-PortscanPro
+function Invoke-PortscanPro
 {
 <#
 .SYNOPSIS
-
 Simple portscan module
-
 PowerSploit Function: Invoke-PortscanPro
 Author: Freev (https://github.com/F3eev/Invoke-PortscanPro)
 License: BSD 3-Clause
 Required Dependencies: None
 Optional Dependencies: None
-
 .DESCRIPTION
-
 Does a simple port scan using regular sockets, based (pretty) loosely on nmap
-
 .PARAMETER Hosts
-
 Include these comma seperated hosts (supports IPv4 CIDR notation) or pipe them in
-
 .PARAMETER HostFile
-
 Input hosts from file rather than commandline
-
 .PARAMETER ExcludeHosts
-
 Exclude these comma seperated hosts
-
 .PARAMETER Ports
-
 Include these comma seperated ports (can also be a range like 80-90)
-
 .PARAMETER PortFile
-
 Input ports from a file
-
 .PARAMETER TopPorts
-
 Include the x top ports - only goes to 1000, default is top 50
-
 .PARAMETER ExcludedPorts
-
 Exclude these comma seperated ports
-
 .PARAMETER SkipDiscovery
-
 Treat all hosts as online, skip host discovery
-
 .PARAMETER PingOnly
-
 Ping scan only (disable port scan)
-
 .PARAMETER DiscoveryPorts
-
 Comma separated ports used for host discovery. -1 is a ping
-
 .PARAMETER Threads
-
 number of max threads for the thread pool (per host)
-
 .PARAMETER nHosts
-
 number of hosts to concurrently scan
-
 .PARAMETER Timeout
-
 Timeout time on a connection in miliseconds before port is declared filtered
-
 .PARAMETER SleepTimer
-
 Wait before thread checking, in miliseconds
-
 .PARAMETER SyncFreq
-
 How often (in terms of hosts) to sync threads and flush output
-
 .PARAMETER T
-
 [0-5] shortcut performance options. Default is 3. higher is more aggressive. Sets (nhosts, threads,timeout)
     5 {$nHosts=30;  $Threads = 1000; $Timeout = 750  }
     4 {$nHosts=25;  $Threads = 1000; $Timeout = 1200 }
     3 {$nHosts=20;  $Threads = 100;  $Timeout = 2500 }
     2 {$nHosts=15;  $Threads = 32;   $Timeout = 3000 }
     1 {$nHosts=10;  $Threads = 32;   $Timeout = 5000 }
-
 .PARAMETER GrepOut
-
 Greppable output file
-
 .PARAMETER XmlOut
-
 output XML file
-
 .PARAMETER ReadableOut
-
 output file in 'readable' format
-
 .PARAMETER AllformatsOut
-
 output in readable (.nmap), xml (.xml), and greppable (.gnmap) formats
-
 .PARAMETER noProgressMeter
-
 Suppresses the progress meter
-
 .PARAMETER quiet
-
 supresses returned output and don't store hosts in memory - useful for very large scans
-
 .PARAMETER ForceOverwrite
-
 Force Overwrite if output Files exist. Otherwise it throws exception
-
 .EXAMPLE
-
 C:\PS> Invoke-PortscanPro -Hosts "webstersprodigy.net,google.com,microsoft.com" -TopPorts 50
-
 Description
 -----------
 Scans the top 50 ports for hosts found for webstersprodigy.net,google.com, and microsoft.com
-
 .EXAMPLE
-
 C:\PS> echo webstersprodigy.net | Invoke-PortscanPro -oG test.gnmap -f -ports "80,443,8080"
-
 Description
 -----------
 Does a portscan of "webstersprodigy.net", and writes a greppable output file
-
 .EXAMPLE
-
 C:\PS> Invoke-PortscanPro -Hosts 192.168.1.1/24 -T 4 -TopPorts 25 -oA localnet
 Description
 -----------
 Scans the top 20 ports for hosts found in the 192.168.1.1/24 range, outputs all file formats
-
 .LINK
 C:\PS> Invoke-PortscanPro -Hosts 192.168.1.1/24 -ports {80,8080} -sports {8011,8080} 
 C:\PS> Invoke-PortscanPro -Hosts 192.168.1.1/24 -ports {80,8080} -sports *
@@ -802,23 +743,18 @@ http://webstersprodigy.net
                     if (-not ("CallbackEventBridge" -as [type])) {
                         Add-Type @"
                             using System;
-
                             public sealed class CallbackEventBridge
                             {
                                 public event AsyncCallback CallbackComplete = delegate { };
-
                                 private CallbackEventBridge() {}
-
                                 private void CallbackInternal(IAsyncResult result)
                                 {
                                     CallbackComplete(result);
                                 }
-
                                 public AsyncCallback Callback
                                 {
                                     get { return new AsyncCallback(CallbackInternal); }
                                 }
-
                                 public static CallbackEventBridge Create()
                                 {
                                     return new CallbackEventBridge();
@@ -1072,7 +1008,7 @@ http://webstersprodigy.net
                 $stream = $socket.GetStream()
 
                 if ($port -eq 139){
-                    Write-Host 139
+                    #Write-Host 139
                     $stream.Write($payload3, 0, $payload3.Length)
                 }
                 $stream.Write($payload1, 0, $payload1.Length)
@@ -1275,16 +1211,13 @@ http://webstersprodigy.net
 
                     
                     $scriptBlockAsString = @"
-
                         #somewhat of a race condition with the timeout, but I don't think it matters
-
                        
                         if ( `$sockets[$p] -ne `$NULL)
                         {
                             if (!`$timeouts[$p].Disposed) {
                                 `$timeouts[$p].Dispose()
                             }
-
                             `$status = `$sockets[$p].Connected;
                             if (`$status -eq `$True)
                             {
@@ -1295,7 +1228,6 @@ http://webstersprodigy.net
                             {
                                 # write-host "$p is closed"
                                 `$closedPorts.Add($p)
-
                             }
                             `$sockets[$p].Close();
                             `$sockets.Remove($p)
@@ -1365,7 +1297,7 @@ http://webstersprodigy.net
                         Write-Error "Exception trying to host scan $h"
                         Write-Error $_.Exception.Message;
                     }
-                    write-host $openPorts.Count
+                    # write-host $openPorts.Count
                     return $False
                 }
 
@@ -1391,7 +1323,7 @@ http://webstersprodigy.net
                     }
                 }
                 [bool] $hostResult = $False
-                write-host  $closedPorts
+                # write-host  $closedPorts
                 if(!$SkipDiscovery)
                 {
                     [bool] $hostResult = PortScan-Alive $thost
